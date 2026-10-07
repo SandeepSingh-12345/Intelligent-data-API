@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Intelligent Data Integration & Processing API — Dashboard</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23106EBE'/><circle cx='50' cy='50' r='22' fill='%230FFCBE'/><text x='50' y='56' text-anchor='middle' font-family='Arial Black' font-weight='900' font-size='18' fill='%23020d1a'>API</text></svg>" />
+<style>
+  /* ── Reset & Tokens ─────────────────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:       #020d1a;
+    --surface:  #061525;
+    --surface2: #0b2035;
+    --border:   #0e2d4a;
+    --text:     #e8f4ff;
+    --muted:    #5a8aaa;
+    --accent:   #106EBE;
+    --accent2:  #0FFCBE;
+    --green:    #0FFCBE;
+    --yellow:   #0dd9a5;
+    --red:      #ff6b9d;
+    --blue:     #106EBE;
+    --orange:   #0bc4a0;
+    --purple:   #0FFCBE;
+    --radius:   10px;
+  }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg); color: var(--text); min-height: 100vh;
+    display: flex; font-size: 14px; line-height: 1.6;
+  }
+
+  /* ── Sidebar ────────────────────────────────────────────────────────────── */
+  #sidebar {
+    width: 220px; min-height: 100vh; background: var(--surface);
+    border-right: 1px solid var(--border); display: flex; flex-direction: column;
+    position: fixed; left: 0; top: 0; bottom: 0; z-index: 100; overflow-y: auto;
+  }
+  .sidebar-logo {
+    padding: 1.2rem 1rem 0.8rem; border-bottom: 1px solid var(--border);
+    font-weight: 800; font-size: 0.9rem; color: var(--accent2); letter-spacing: -0.3px;
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .sidebar-logo span { opacity: 0.6; font-size: 0.72rem; font-weight: 400; display: block; color: var(--muted); }
+  nav { padding: 0.75rem 0; flex: 1; }
+  .nav-section { padding: 0.6rem 1rem 0.3rem; font-size: 0.65rem; font-weight: 700;
+    color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+  .nav-item {
+    display: flex; align-items: center; gap: 0.6rem; padding: 0.5rem 1rem;
+    cursor: pointer; color: var(--muted); transition: all 0.15s; font-size: 0.83rem;
+    border-left: 3px solid transparent;
+  }
+  .nav-item:hover { color: var(--text); background: var(--surface2); }
+  .nav-item.active { color: #0FFCBE; background: rgba(16,110,190,0.15); border-left-color: #106EBE; font-weight: 600; }
+  .nav-item .icon { font-size: 1rem; width: 1.2rem; text-align: center; }
+  .status-dot { width: 7px; height: 7px; border-radius: 50%; background: #0FFCBE;
+    margin-left: auto; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{ opacity:1 } 50%{ opacity:0.4 } }
+  .sidebar-footer { padding: 0.75rem 1rem; border-top: 1px solid var(--border); font-size: 0.72rem; color: var(--muted); }
+  .api-badge { display: inline-block; padding: 2px 7px; border-radius: 4px;
+    background: rgba(15,252,190,0.1); color: #0FFCBE; border: 1px solid rgba(15,252,190,0.3); font-size: 0.7rem; font-weight: 600; }
+
+  /* ── Main ───────────────────────────────────────────────────────────────── */
+  #main { margin-left: 220px; flex: 1; padding: 1.75rem 2rem; min-height: 100vh; }
+
+  /* ── Pages ──────────────────────────────────────────────────────────────── */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── Typography ─────────────────────────────────────────────────────────── */
+  h1 { font-size: 1.5rem; font-weight: 800; margin-bottom: 0.2rem; }
+  h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; }
+  h3 { font-size: 0.9rem; font-weight: 700; margin-bottom: 0.5rem; }
+  .page-desc { font-size: 0.83rem; color: var(--muted); margin-bottom: 1.5rem; }
+
+  /* ── Cards & Grid ───────────────────────────────────────────────────────── */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.2rem; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+  .grid-auto { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; }
+
+  /* ── Stat cards ─────────────────────────────────────────────────────────── */
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.2rem 1.4rem; }
+  .stat-label { font-size: 0.72rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem; }
+  .stat-value { font-size: 2rem; font-weight: 800; line-height: 1; }
+  .stat-sub { font-size: 0.75rem; color: var(--muted); margin-top: 0.3rem; }
+  .stat-green { color: #0FFCBE; }
+  .stat-blue  { color: #56aff0; }
+  .stat-yellow{ color: #0dd9a5; }
+  .stat-purple{ color: #0FFCBE; }
+  .stat-orange{ color: #0bc4a0; }
+
+  /* ── Section headers ────────────────────────────────────────────────────── */
+  .section { margin-bottom: 2rem; }
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+  .section-title { font-size: 0.9rem; font-weight: 700; }
+
+  /* ── Tables ─────────────────────────────────────────────────────────────── */
+  .table-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+  thead th { padding: 0.65rem 1rem; text-align: left; background: var(--surface2);
+    font-size: 0.71rem; font-weight: 700; color: var(--muted); text-transform: uppercase;
+    letter-spacing: 0.05em; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--surface2); }
+  tbody td { padding: 0.65rem 1rem; vertical-align: middle; }
+  .mono { font-family: 'Consolas', 'Courier New', monospace; font-size: 0.8rem; }
+
+  /* ── Badges ─────────────────────────────────────────────────────────────── */
+  .badge { display: inline-block; padding: 0.18rem 0.55rem; border-radius: 9999px; font-size: 0.69rem; font-weight: 700; white-space: nowrap; }
+  .b-green  { background: rgba(15,252,190,0.12); color: #0FFCBE; border: 1px solid rgba(15,252,190,0.3); }
+  .b-red    { background: rgba(255,107,157,0.12);color: #ff6b9d; border: 1px solid rgba(255,107,157,0.3); }
+  .b-yellow { background: rgba(13,217,165,0.12); color: #0dd9a5; border: 1px solid rgba(13,217,165,0.25); }
+  .b-blue   { background: rgba(16,110,190,0.18); color: #56aff0; border: 1px solid rgba(16,110,190,0.4); }
+  .b-purple { background: rgba(15,252,190,0.10); color: #0FFCBE; border: 1px solid rgba(15,252,190,0.25); }
+  .b-orange { background: rgba(11,196,160,0.12); color: #0bc4a0; border: 1px solid rgba(11,196,160,0.25); }
+  .b-gray   { background: rgba(90,138,170,0.12); color: #5a8aaa; border: 1px solid rgba(90,138,170,0.2); }
+
+  /* ── Buttons ────────────────────────────────────────────────────────────── */
+  .btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.45rem 1rem;
+    border-radius: 7px; border: 1px solid var(--border); background: var(--surface2);
+    color: var(--text); cursor: pointer; font-size: 0.8rem; font-weight: 600; transition: all 0.15s; }
+  .btn:hover { border-color: #106EBE; color: #0FFCBE; }
+  .btn-primary { background: #106EBE; border-color: #106EBE; color: #ffffff; }
+  .btn-primary:hover { background: #0d5da0; border-color: #0d5da0; color: #0FFCBE; }
+  .btn-sm { padding: 0.3rem 0.7rem; font-size: 0.75rem; }
+
+  /* ── Forms ──────────────────────────────────────────────────────────────── */
+  .input-row { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; margin-bottom: 1rem; }
+  input[type=text], input[type=number], select {
+    background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+    padding: 0.4rem 0.75rem; border-radius: 7px; font-size: 0.82rem; outline: none; transition: border 0.15s;
+  }
+  input[type=text]:focus, input[type=number]:focus, select:focus { border-color: #106EBE; }
+  input[type=text]::placeholder { color: var(--muted); }
+  label { font-size: 0.78rem; color: var(--muted); font-weight: 600; }
+
+  /* ── Loading / Error ────────────────────────────────────────────────────── */
+  .loading { color: var(--muted); font-size: 0.82rem; padding: 1.5rem; text-align: center; }
+  .err-msg  { color: var(--red);   font-size: 0.82rem; padding: 1rem; background: rgba(239,68,68,0.07);
+    border: 1px solid rgba(239,68,68,0.2); border-radius: 7px; }
+  .empty    { color: var(--muted); font-size: 0.82rem; padding: 1.5rem; text-align: center; opacity: 0.7; }
+
+  /* ── Detail panel ───────────────────────────────────────────────────────── */
+  .detail-overlay { display:none; position:fixed; inset:0; background: rgba(0,0,0,0.6);
+    z-index: 200; align-items: center; justify-content: center; padding: 2rem; }
+  .detail-overlay.open { display: flex; }
+  .detail-box { background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    max-width: 680px; width: 100%; max-height: 85vh; overflow-y: auto; padding: 1.5rem; position: relative; }
+  .detail-close { position: absolute; top: 1rem; right: 1rem; cursor: pointer;
+    color: var(--muted); font-size: 1.2rem; background: none; border: none; transition: color 0.15s; }
+  .detail-close:hover { color: var(--text); }
+  .detail-title { font-size: 1.1rem; font-weight: 800; margin-bottom: 1.25rem; }
+  .detail-row { display: flex; justify-content: space-between; align-items: flex-start;
+    padding: 0.5rem 0; border-bottom: 1px solid var(--border); font-size: 0.82rem; }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-key { color: var(--muted); font-weight: 600; min-width: 140px; }
+  .detail-val { text-align: right; word-break: break-all; }
+  .detail-section { margin-top: 1rem; margin-bottom: 0.5rem; font-size: 0.72rem;
+    font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+
+  /* ── Bar chart (pure CSS) ───────────────────────────────────────────────── */
+  .bar-row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.6rem; font-size: 0.78rem; }
+  .bar-label { min-width: 110px; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); }
+  .bar-track { flex: 1; height: 10px; background: var(--surface2); border-radius: 9999px; overflow: hidden; }
+  .bar-fill  { height: 100%; border-radius: 9999px; transition: width 0.6s cubic-bezier(.4,0,.2,1); }
+  .bar-val   { min-width: 60px; text-align: right; font-weight: 600; color: var(--text); }
+
+  /* ── Pagination ─────────────────────────────────────────────────────────── */
+  .pagination { display: flex; gap: 0.4rem; align-items: center; margin-top: 0.75rem; }
+  .page-info { font-size: 0.78rem; color: var(--muted); }
+
+  /* ── Job status pill ────────────────────────────────────────────────────── */
+  .job-pulse { animation: pulse 1.5s infinite; }
+
+  /* ── API Explorer ───────────────────────────────────────────────────────── */
+  .ep-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 0.9rem 1.1rem; margin-bottom: 0.6rem; cursor: pointer; transition: border-color 0.15s; }
+  .ep-card:hover { border-color: #106EBE; }
+  .ep-header { display: flex; align-items: center; gap: 0.6rem; }
+  .method-get  { background: rgba(16,110,190,0.18); color: #56aff0; border: 1px solid rgba(16,110,190,0.4); padding: 0.15rem 0.5rem; border-radius: 5px; font-size: 0.7rem; font-weight: 700; min-width: 44px; text-align: center; }
+  .method-post { background: rgba(15,252,190,0.12); color: #0FFCBE; border: 1px solid rgba(15,252,190,0.35); padding: 0.15rem 0.5rem; border-radius: 5px; font-size: 0.7rem; font-weight: 700; min-width: 44px; text-align: center; }
+  .ep-path { font-family: monospace; font-size: 0.82rem; font-weight: 600; }
+  .ep-desc { font-size: 0.78rem; color: var(--muted); margin-top: 0.3rem; }
+  .ep-response { background: var(--bg); border: 1px solid var(--border); border-radius: 7px;
+    padding: 0.75rem 1rem; font-family: monospace; font-size: 0.75rem; max-height: 300px;
+    overflow: auto; margin-top: 0.75rem; white-space: pre-wrap; word-break: break-all;
+    display: none; color: var(--green); }
+  .ep-response.visible { display: block; }
+
+  /* ── Responsive ─────────────────────────────────────────────────────────── */
+  @media (max-width: 900px) {
+    #sidebar { width: 180px; }
+    #main { margin-left: 180px; padding: 1rem; }
+    .grid-4 { grid-template-columns: repeat(2, 1fr); }
+    .grid-3 { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 640px) {
+    #sidebar { display: none; }
+    #main { margin-left: 0; }
+    .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════ SIDEBAR ════════════════════════════════════ -->
+<aside id="sidebar">
+  <div class="sidebar-logo">
+    <svg width="36" height="36" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">
+      <!-- gear body -->
+      <path d="M50 18 L55 10 L60 10 L62 18 Q67 19 71 22 L79 17 L83 21 L78 29 Q81 33 82 38 L90 40 L90 45 L82 47 Q81 52 78 56 L83 64 L79 68 L71 63 Q67 66 62 67 L60 75 L55 75 L50 67 L45 75 L40 75 L38 67 Q33 66 29 63 L21 68 L17 64 L22 56 Q19 52 18 47 L10 45 L10 40 L18 38 Q19 33 22 29 L17 21 L21 17 L29 22 Q33 19 38 18 L40 10 L45 10 Z" fill="#FFD04B" stroke="#111" stroke-width="3" stroke-linejoin="round"/>
+      <!-- gear teeth simplified as polygon -->
+      <!-- inner circle -->
+      <circle cx="50" cy="42" r="18" fill="#A8F0E8" stroke="#111" stroke-width="3"/>
+      <!-- API text -->
+      <text x="50" y="48" text-anchor="middle" font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="13" fill="#111" letter-spacing="1">API</text>
+      <!-- connector lines -->
+      <line x1="10" y1="20" x2="22" y2="20" stroke="#111" stroke-width="3" stroke-linecap="round"/>
+      <line x1="10" y1="20" x2="10" y2="35" stroke="#111" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="10" cy="36" r="5" fill="#FF69B4" stroke="#111" stroke-width="2"/>
+      <line x1="90" y1="15" x2="78" y2="15" stroke="#111" stroke-width="3" stroke-linecap="round"/>
+      <line x1="90" y1="15" x2="90" y2="28" stroke="#111" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="90" cy="14" r="5" fill="#B060D0" stroke="#111" stroke-width="2"/>
+      <line x1="78" y1="68" x2="90" y2="68" stroke="#111" stroke-width="3" stroke-linecap="round"/>
+      <line x1="90" y1="68" x2="90" y2="80" stroke="#111" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="90" cy="82" r="5" fill="#44DD88" stroke="#111" stroke-width="2"/>
+      <line x1="22" y1="68" x2="10" y2="68" stroke="#111" stroke-width="3" stroke-linecap="round"/>
+      <line x1="10" y1="68" x2="10" y2="80" stroke="#111" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="10" cy="82" r="5" fill="#44DD88" stroke="#111" stroke-width="2"/>
+    </svg>
+    <div>
+      <div>Data API</div>
+      <span>Office Solution AI Labs</span>
+    </div>
+  </div>
+  <nav>
+    <div class="nav-section">Main</div>
+    <div class="nav-item active" onclick="showPage('dashboard')" id="nav-dashboard">
+      <span class="icon">
+        <svg width="16" height="16" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+          <!-- bar 1 (short, left) -->
+          <rect x="4" y="58" width="16" height="30" rx="2"/>
+          <!-- bar 2 (medium) -->
+          <rect x="26" y="42" width="16" height="46" rx="2"/>
+          <!-- bar 3 (medium-tall) -->
+          <rect x="48" y="30" width="16" height="58" rx="2"/>
+          <!-- bar 4 (tall, right of line) -->
+          <rect x="62" y="18" width="16" height="44" rx="2"/>
+          <!-- line chart over bars -->
+          <polyline points="12,52 34,34 56,22 72,8" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+          <!-- arrow head -->
+          <polygon points="72,8 86,6 80,20"/>
+          <!-- pie chart (bottom right) -->
+          <!-- full circle background slice -->
+          <path d="M78,72 m-18,0 a18,18 0 1,0 18,-18" fill="none"/>
+          <circle cx="78" cy="72" r="20" opacity="0.15"/>
+          <!-- pie slice 1 (large ~270deg) -->
+          <path d="M78,72 L78,52 A20,20 0 1,1 58,72 Z"/>
+          <!-- pie slice 2 (small ~90deg gap) -->
+          <path d="M78,72 L98,72 A20,20 0 0,1 78,92 Z" opacity="0.4"/>
+        </svg>
+      </span> Dashboard <span class="status-dot"></span>
+    </div>
+    <div class="nav-section">Data</div>
+    <div class="nav-item" onclick="showPage('customers')" id="nav-customers">
+      <span class="icon">
+        <svg width="16" height="16" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+          <!-- head -->
+          <circle cx="50" cy="32" r="18"/>
+          <!-- headband arc -->
+          <path d="M32,32 Q32,10 50,10 Q68,10 68,32"/>
+          <!-- left ear cup -->
+          <rect x="24" y="28" width="10" height="14" rx="4"/>
+          <!-- right ear cup -->
+          <rect x="66" y="28" width="10" height="14" rx="4"/>
+          <!-- mic arm -->
+          <path d="M34,38 Q28,44 32,50"/>
+          <!-- mic capsule -->
+          <rect x="28" y="49" width="12" height="7" rx="3.5"/>
+          <!-- neck / body -->
+          <path d="M36,50 Q30,56 28,64"/>
+          <path d="M64,50 Q70,56 72,64"/>
+          <!-- shirt collar V -->
+          <path d="M40,54 L50,66 L60,54"/>
+          <!-- tie -->
+          <path d="M47,58 L50,72 L53,58"/>
+          <!-- shoulders/body arc -->
+          <path d="M8,96 Q10,72 28,66 Q38,62 50,62 Q62,62 72,66 Q90,72 92,96"/>
+          <!-- jacket lapel dots -->
+          <circle cx="62" cy="72" r="2" fill="currentColor" stroke="none"/>
+          <path d="M60,78 Q64,76 66,72"/>
+        </svg>
+      </span> Customers
+    </div>
+    <div class="nav-item" onclick="showPage('orders')" id="nav-orders">
+      <span class="icon">🛒</span> Orders
+    </div>
+    <div class="nav-item" onclick="showPage('shipments')" id="nav-shipments">
+      <span class="icon">
+        <svg width="18" height="14" viewBox="0 0 110 75" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+          <!-- truck body -->
+          <rect x="28" y="8" width="60" height="42" rx="6"/>
+          <!-- cab -->
+          <path d="M88,8 L88,50 Q100,50 106,44 L106,28 Q106,20 100,14 L96,8 Z"/>
+          <!-- cab window -->
+          <path d="M91,12 L91,26 Q97,26 103,28 L103,16 Q100,12 96,12 Z" fill="#000" opacity="0.35"/>
+          <!-- wheels -->
+          <circle cx="48" cy="58" r="12"/>
+          <circle cx="48" cy="58" r="5" fill="#111"/>
+          <circle cx="90" cy="58" r="12"/>
+          <circle cx="90" cy="58" r="5" fill="#111"/>
+          <!-- speed lines -->
+          <line x1="22" y1="28" x2="0" y2="28" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>
+          <line x1="18" y1="40" x2="4"  y2="40" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>
+          <line x1="22" y1="52" x2="8"  y2="52" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>
+        </svg>
+      </span> Shipments
+    </div>
+    <div class="nav-section">Analytics</div>
+    <div class="nav-item" onclick="showPage('analytics')" id="nav-analytics">
+      <span class="icon">📈</span> Analytics
+    </div>
+    <div class="nav-item" onclick="showPage('products')" id="nav-products">
+      <span class="icon">📦</span> Products
+    </div>
+    <div class="nav-section">Tools</div>
+    <div class="nav-item" onclick="showPage('ingestion')" id="nav-ingestion">
+      <span class="icon">⚙️</span> Ingestion
+    </div>
+    <div class="nav-item" onclick="showPage('explorer')" id="nav-explorer">
+      <span class="icon">🔭</span> API Explorer
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div style="margin-bottom:0.4rem"><span class="api-badge">● LIVE</span> <span style="margin-left:0.3rem">:8000</span></div>
+    <div><a href="http://127.0.0.1:8000/docs" target="_blank" style="color:#0FFCBE;text-decoration:none;font-size:0.72rem">Swagger UI ↗</a></div>
+  </div>
+</aside>
+
+<!-- ═══════════════════════════ MAIN CONTENT ════════════════════════════════ -->
+<main id="main">
+
+  <!-- ══════════════════════════ DASHBOARD ════════════════════════════════ -->
+  <div class="page active" id="page-dashboard">
+    <h1>
+      <svg width="28" height="28" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" fill="currentColor" style="vertical-align:middle;margin-right:0.4rem">
+        <rect x="4" y="58" width="16" height="30" rx="2"/>
+        <rect x="26" y="42" width="16" height="46" rx="2"/>
+        <rect x="48" y="30" width="16" height="58" rx="2"/>
+        <rect x="62" y="18" width="16" height="44" rx="2"/>
+        <polyline points="12,52 34,34 56,22 72,8" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+        <polygon points="72,8 86,6 80,20"/>
+        <circle cx="78" cy="72" r="20" opacity="0.15"/>
+        <path d="M78,72 L78,52 A20,20 0 1,1 58,72 Z"/>
+        <path d="M78,72 L98,72 A20,20 0 0,1 78,92 Z" opacity="0.4"/>
+      </svg>Dashboard
+    </h1>
+    <p class="page-desc">Live overview of your data — pulled directly from <code>http://127.0.0.1:8000</code></p>
+
+    <div class="grid-4" style="margin-bottom:1.5rem" id="dash-stats">
+      <div class="stat-card"><div class="stat-label">Customers</div><div class="stat-value stat-blue" id="s-customers">…</div></div>
+      <div class="stat-card"><div class="stat-label">Orders</div><div class="stat-value stat-purple" id="s-orders">…</div></div>
+      <div class="stat-card"><div class="stat-label">Shipments</div><div class="stat-value stat-orange" id="s-shipments">…</div></div>
+      <div class="stat-card"><div class="stat-label">API Status</div><div class="stat-value stat-green" id="s-status">…</div></div>
+    </div>
+
+    <div class="grid-2" style="margin-bottom:1.5rem">
+      <!-- Recent orders -->
+      <div class="section">
+        <div class="section-header"><span class="section-title">Recent Orders</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Order ID</th><th>Customer</th><th>Date</th><th>Revenue</th></tr></thead>
+            <tbody id="dash-orders"><tr><td colspan="4" class="loading">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      <!-- Shipment status breakdown -->
+      <div class="section">
+        <div class="section-header"><span class="section-title">Shipment Status</span></div>
+        <div class="card" id="dash-shipment-status" style="min-height:120px"><div class="loading">Loading…</div></div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <!-- Top products bar -->
+      <div class="section">
+        <div class="section-header"><span class="section-title">Top Products by Revenue</span></div>
+        <div class="card" id="dash-top-products"><div class="loading">Loading…</div></div>
+      </div>
+      <!-- Regional breakdown -->
+      <div class="section">
+        <div class="section-header"><span class="section-title">Revenue by Region</span></div>
+        <div class="card" id="dash-regions"><div class="loading">Loading…</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════ CUSTOMERS ════════════════════════════════ -->
+  <div class="page" id="page-customers">
+    <h1>
+      <svg width="26" height="26" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:0.4rem">
+        <circle cx="50" cy="32" r="18"/>
+        <path d="M32,32 Q32,10 50,10 Q68,10 68,32"/>
+        <rect x="24" y="28" width="10" height="14" rx="4"/>
+        <rect x="66" y="28" width="10" height="14" rx="4"/>
+        <path d="M34,38 Q28,44 32,50"/>
+        <rect x="28" y="49" width="12" height="7" rx="3.5"/>
+        <path d="M36,50 Q30,56 28,64"/>
+        <path d="M64,50 Q70,56 72,64"/>
+        <path d="M40,54 L50,66 L60,54"/>
+        <path d="M47,58 L50,72 L53,58"/>
+        <path d="M8,96 Q10,72 28,66 Q38,62 50,62 Q62,62 72,66 Q90,72 92,96"/>
+        <circle cx="62" cy="72" r="2" fill="currentColor" stroke="none"/>
+        <path d="M60,78 Q64,76 66,72"/>
+      </svg>Customers
+    </h1>
+    <p class="page-desc">Browse and search all customers. Click a row for full details.</p>
+    <div class="input-row">
+      <input type="text" id="cust-search" placeholder="Search by name…" style="width:200px" oninput="loadCustomers()" />
+      <label>Region:</label>
+      <select id="cust-region" onchange="loadCustomers()">
+        <option value="">All Regions</option>
+        <option>North</option><option>South</option><option>East</option><option>West</option>
+      </select>
+      <label>Page size:</label>
+      <select id="cust-size" onchange="loadCustomers()">
+        <option>5</option><option selected>10</option><option>20</option><option>50</option>
+      </select>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Customer ID</th><th>Name</th><th>Region</th><th>Email</th><th>Phone</th><th>Actions</th></tr></thead>
+        <tbody id="cust-body"><tr><td colspan="6" class="loading">Loading…</td></tr></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="cust-pagination"></div>
+  </div>
+
+  <!-- ══════════════════════════ ORDERS ═══════════════════════════════════ -->
+  <div class="page" id="page-orders">
+    <h1>🛒 Orders</h1>
+    <p class="page-desc">All orders with items, financials and shipment links. Click a row for full details.</p>
+    <div class="input-row">
+      <input type="text" id="ord-customer" placeholder="Customer ID…" style="width:140px" oninput="loadOrders()" />
+      <input type="text" id="ord-start" placeholder="Start date (YYYY-MM-DD)" style="width:180px" oninput="loadOrders()" />
+      <input type="text" id="ord-end"   placeholder="End date (YYYY-MM-DD)"   style="width:180px" oninput="loadOrders()" />
+      <label>Sort:</label>
+      <select id="ord-sort" onchange="loadOrders()">
+        <option value="order_date">Date</option>
+      </select>
+      <select id="ord-dir" onchange="loadOrders()">
+        <option value="desc">Desc</option><option value="asc">Asc</option>
+      </select>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Order ID</th><th>Customer</th><th>Date</th><th>Items</th><th>Revenue</th><th>Profit</th><th>Margin</th><th>Shipment</th></tr></thead>
+        <tbody id="ord-body"><tr><td colspan="8" class="loading">Loading…</td></tr></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="ord-pagination"></div>
+  </div>
+
+  <!-- ══════════════════════════ SHIPMENTS ════════════════════════════════ -->
+  <div class="page" id="page-shipments">
+    <h1>🚚 Shipments</h1>
+    <p class="page-desc">Track all shipments by status, warehouse and date.</p>
+    <div class="input-row">
+      <label>Status:</label>
+      <select id="ship-status" onchange="loadShipments()">
+        <option value="">All</option>
+        <option>Delivered</option><option>In Transit</option><option>Pending</option>
+      </select>
+      <label>Warehouse:</label>
+      <input type="text" id="ship-wh" placeholder="e.g. WH01" style="width:110px" oninput="loadShipments()" />
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Shipment ID</th><th>Order ID</th><th>Warehouse</th><th>Dispatch</th><th>Delivery</th><th>Status</th><th>Duration (days)</th></tr></thead>
+        <tbody id="ship-body"><tr><td colspan="7" class="loading">Loading…</td></tr></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="ship-pagination"></div>
+  </div>
+
+  <!-- ══════════════════════════ ANALYTICS ════════════════════════════════ -->
+  <div class="page" id="page-analytics">
+    <h1>📈 Customer Analytics</h1>
+    <p class="page-desc">Revenue, profit and order KPIs per customer.</p>
+    <div class="input-row">
+      <input type="text" id="ana-id" placeholder="Customer ID (e.g. C001)" style="width:220px" />
+      <button class="btn btn-primary" onclick="loadCustomerAnalytics()">Fetch Analytics</button>
+    </div>
+    <div id="ana-result"></div>
+    <hr style="border-color:var(--border);margin:1.5rem 0" />
+    <h2>Regional Analytics</h2>
+    <div id="region-result"><div class="loading">Loading…</div></div>
+  </div>
+
+  <!-- ══════════════════════════ PRODUCTS ═════════════════════════════════ -->
+  <div class="page" id="page-products">
+    <h1>📦 Product Analytics</h1>
+    <p class="page-desc">All products — sales, revenue, cost, profit and margin.</p>
+    <div class="input-row">
+      <label>Top N products:</label>
+      <input type="number" id="top-n" value="5" min="1" max="50" style="width:80px" />
+      <button class="btn btn-primary" onclick="loadTopProducts()">Load Top Products</button>
+    </div>
+    <div class="section">
+      <div class="section-header"><span class="section-title">All Products</span></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Product ID</th><th>Name</th><th>Category</th><th>Qty Sold</th><th>Revenue</th><th>Cost</th><th>Profit</th><th>Margin %</th></tr></thead>
+          <tbody id="prod-body"><tr><td colspan="8" class="loading">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-header"><span class="section-title" id="top-title">Top 5 Products by Revenue</span></div>
+      <div class="card" id="top-chart"><div class="loading">Click "Load Top Products"</div></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════ INGESTION ════════════════════════════════ -->
+  <div class="page" id="page-ingestion">
+    <h1>⚙️ Ingestion Jobs</h1>
+    <p class="page-desc">Trigger a background data ingestion job and track its status.</p>
+    <div style="margin-bottom:1.5rem">
+      <button class="btn btn-primary" onclick="triggerIngest()">▶ Trigger New Ingestion</button>
+    </div>
+    <div id="job-result"></div>
+    <hr style="border-color:var(--border);margin:1.5rem 0" />
+    <div class="input-row">
+      <input type="text" id="job-id-input" placeholder="Job ID…" style="width:320px" />
+      <button class="btn" onclick="fetchJob()">Check Job Status</button>
+    </div>
+    <div id="job-detail"></div>
+  </div>
+
+  <!-- ══════════════════════════ API EXPLORER ══════════════════════════════ -->
+  <div class="page" id="page-explorer">
+    <h1>🔭 API Explorer</h1>
+    <p class="page-desc">Click any endpoint to fetch a live response from <code>http://127.0.0.1:8000</code></p>
+    <div id="explorer-list"></div>
+  </div>
+
+</main>
+
+<!-- ══════════════════════════ DETAIL OVERLAY ═══════════════════════════════ -->
+<div class="detail-overlay" id="detail-overlay" onclick="closeDetail(event)">
+  <div class="detail-box" id="detail-box">
+    <button class="detail-close" onclick="closeDetailBox()">✕</button>
+    <div class="detail-title" id="detail-title">Details</div>
+    <div id="detail-content"></div>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════════════════════════════════════════
+   CONFIG
+════════════════════════════════════════════════════════════════════════════ */
+const API = 'http://127.0.0.1:8000';
+
+/* ════════════════════════════════════════════════════════════════════════════
+   NAVIGATION
+════════════════════════════════════════════════════════════════════════════ */
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.getElementById('nav-' + name).classList.add('active');
+  if (name === 'dashboard')  loadDashboard();
+  if (name === 'customers')  loadCustomers();
+  if (name === 'orders')     loadOrders();
+  if (name === 'shipments')  loadShipments();
+  if (name === 'analytics')  loadRegions();
+  if (name === 'products')   { loadProducts(); loadTopProducts(); }
+  if (name === 'ingestion')  {}
+  if (name === 'explorer')   buildExplorer();
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   HELPERS
+════════════════════════════════════════════════════════════════════════════ */
+async function get(path) {
+  const res = await fetch(API + path);
+  if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.message || res.statusText); }
+  return res.json();
+}
+
+function fmt(n) {
+  if (n == null) return '—';
+  return Number(n).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+}
+function fmtCur(n) {
+  if (n == null) return '—';
+  return '₹' + Number(n).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+}
+function fmtPct(n) {
+  if (n == null) return '—';
+  return Number(n).toFixed(1) + '%';
+}
+function shipBadge(s) {
+  const map = { 'Delivered': 'b-green', 'In Transit': 'b-yellow', 'Pending': 'b-orange', 'Failed': 'b-red' };
+  return `<span class="badge ${map[s] || 'b-gray'}">${s || '—'}</span>`;
+}
+function jobBadge(s) {
+  const map = { completed: 'b-green', failed: 'b-red', running: 'b-yellow job-pulse', queued: 'b-blue' };
+  return `<span class="badge ${map[s] || 'b-gray'}">${s}</span>`;
+}
+function catBadge(c) {
+  const map = { Electronics: 'b-blue', Furniture: 'b-orange', Accessories: 'b-purple' };
+  return `<span class="badge ${map[c] || 'b-gray'}">${c || '—'}</span>`;
+}
+
+function setEl(id, html) { const el = document.getElementById(id); if (el) el.innerHTML = html; }
+
+function barChart(items, labelKey, valKey, color = '#106EBE') {
+  if (!items || items.length === 0) return '<div class="empty">No data</div>';
+  const max = Math.max(...items.map(i => i[valKey] || 0)) || 1;
+  return items.map(i => {
+    const pct = ((i[valKey] || 0) / max * 100).toFixed(1);
+    return `<div class="bar-row">
+      <div class="bar-label" title="${i[labelKey]}">${i[labelKey]}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${color}"></div></div>
+      <div class="bar-val">${fmtCur(i[valKey])}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   DETAIL OVERLAY
+════════════════════════════════════════════════════════════════════════════ */
+function openDetail(title, rows) {
+  document.getElementById('detail-title').textContent = title;
+  document.getElementById('detail-content').innerHTML = rows.map(([k, v]) =>
+    `<div class="detail-row"><span class="detail-key">${k}</span><span class="detail-val">${v != null ? v : '—'}</span></div>`
+  ).join('');
+  document.getElementById('detail-overlay').classList.add('open');
+}
+function openDetailHTML(title, html) {
+  document.getElementById('detail-title').textContent = title;
+  document.getElementById('detail-content').innerHTML = html;
+  document.getElementById('detail-overlay').classList.add('open');
+}
+function closeDetail(e) { if (e.target === document.getElementById('detail-overlay')) closeDetailBox(); }
+function closeDetailBox() { document.getElementById('detail-overlay').classList.remove('open'); }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   DASHBOARD
+════════════════════════════════════════════════════════════════════════════ */
+let dashLoaded = false;
+async function loadDashboard() {
+  if (dashLoaded) return;
+  // Health
+  try {
+    const h = await get('/health');
+    setEl('s-status', h.status === 'healthy' ? '✅' : '❌');
+  } catch { setEl('s-status', '❌'); }
+
+  // Counts
+  try {
+    const c = await get('/customers?page=1&page_size=1');
+    setEl('s-customers', fmt(c.total));
+  } catch { setEl('s-customers', 'err'); }
+  try {
+    const o = await get('/orders?page=1&page_size=1');
+    setEl('s-orders', fmt(o.total));
+  } catch { setEl('s-orders', 'err'); }
+  try {
+    const s = await get('/shipments?page=1&page_size=1');
+    setEl('s-shipments', fmt(s.total));
+  } catch { setEl('s-shipments', 'err'); }
+
+  // Recent orders table
+  try {
+    const o = await get('/orders?page=1&page_size=5&sort_by=order_date&sort_order=desc');
+    const rows = (o.items || []).map(ord => {
+      const rev = (ord.items || []).reduce((s, i) => s + (i.quantity * i.unit_price), 0);
+      return `<tr>
+        <td class="mono">${ord.order_id}</td>
+        <td>${ord.customer?.name || ord.customer_id}</td>
+        <td>${ord.order_date}</td>
+        <td>${fmtCur(rev)}</td>
+      </tr>`;
+    }).join('') || '<tr><td colspan="4" class="empty">No orders</td></tr>';
+    setEl('dash-orders', rows);
+  } catch(e) { setEl('dash-orders', `<tr><td colspan="4" class="err-msg">${e.message}</td></tr>`); }
+
+  // Shipment status breakdown
+  try {
+    const s = await get('/shipments?page=1&page_size=100');
+    const counts = {};
+    (s.items || []).forEach(sh => { counts[sh.status] = (counts[sh.status] || 0) + 1; });
+    const total = Object.values(counts).reduce((a,b) => a+b, 0) || 1;
+    const colors = { Delivered: '#0FFCBE', 'In Transit': '#106EBE', Pending: '#0bc4a0', default: '#0d5da0' };
+    const html = Object.entries(counts).map(([k, v]) => {
+      const pct = (v / total * 100).toFixed(0);
+      const color = colors[k] || colors.default;
+      return `<div class="bar-row">
+        <div class="bar-label">${k}</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${color}"></div></div>
+        <div class="bar-val">${v} <span style="color:var(--muted);font-size:0.7rem">(${pct}%)</span></div>
+      </div>`;
+    }).join('') || '<div class="empty">No shipments</div>';
+    setEl('dash-shipment-status', html);
+  } catch(e) { setEl('dash-shipment-status', `<div class="err-msg">${e.message}</div>`); }
+
+  // Top products bar
+  try {
+    const tp = await get('/analytics/top-products?n=5');
+    setEl('dash-top-products', barChart(tp, 'product_name', 'revenue', '#106EBE'));
+  } catch(e) { setEl('dash-top-products', `<div class="err-msg">${e.message}</div>`); }
+
+  // Regions
+  try {
+    const r = await get('/analytics/regions');
+    setEl('dash-regions', barChart(r, 'region', 'revenue', '#0FFCBE'));
+  } catch(e) { setEl('dash-regions', `<div class="err-msg">${e.message}</div>`); }
+
+  dashLoaded = true;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   CUSTOMERS
+════════════════════════════════════════════════════════════════════════════ */
+let custPage = 1;
+async function loadCustomers(page) {
+  if (page) custPage = page;
+  const name   = document.getElementById('cust-search').value;
+  const region = document.getElementById('cust-region').value;
+  const size   = document.getElementById('cust-size').value;
+  let url = `/customers?page=${custPage}&page_size=${size}`;
+  if (name)   url += `&name=${encodeURIComponent(name)}`;
+  if (region) url += `&region=${encodeURIComponent(region)}`;
+  setEl('cust-body', '<tr><td colspan="6" class="loading">Loading…</td></tr>');
+  try {
+    const d = await get(url);
+    const rows = (d.items || []).map(c => `<tr>
+      <td class="mono">${c.customer_id}</td>
+      <td>${c.name}</td>
+      <td><span class="badge b-blue">${c.region}</span></td>
+      <td>${c.email || '—'}</td>
+      <td>${c.phone || '—'}</td>
+      <td><button class="btn btn-sm" onclick="showCustomerDetail('${c.customer_id}')">Details</button></td>
+    </tr>`).join('') || '<tr><td colspan="6" class="empty">No customers found</td></tr>';
+    setEl('cust-body', rows);
+    renderPagination('cust-pagination', custPage, size, d.total, loadCustomers);
+  } catch(e) { setEl('cust-body', `<tr><td colspan="6" class="err-msg">${e.message}</td></tr>`); }
+}
+
+async function showCustomerDetail(id) {
+  try {
+    const c = await get(`/customers/${id}`);
+    const a = await get(`/analytics/customers/${id}`).catch(() => null);
+    let html = `
+      <div class="detail-section">Customer Info</div>
+      ${row('ID', c.customer_id)} ${row('Name', c.name)} ${row('Region', c.region)}
+      ${row('Email', c.email)} ${row('Phone', c.phone)}`;
+    if (a) {
+      html += `<div class="detail-section" style="margin-top:1rem">Analytics</div>
+        ${row('Total Orders', fmt(a.total_orders))}
+        ${row('Total Revenue', fmtCur(a.total_revenue))}
+        ${row('Total Profit', fmtCur(a.total_profit))}
+        ${row('Avg Order Value', fmtCur(a.average_order_value))}`;
+    }
+    openDetailHTML(`Customer: ${c.name}`, html);
+  } catch(e) { alert(e.message); }
+}
+
+function row(k, v) {
+  return `<div class="detail-row"><span class="detail-key">${k}</span><span class="detail-val">${v != null ? v : '—'}</span></div>`;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   ORDERS
+════════════════════════════════════════════════════════════════════════════ */
+let ordPage = 1;
+async function loadOrders(page) {
+  if (page) ordPage = page;
+  const cid   = document.getElementById('ord-customer').value;
+  const start = document.getElementById('ord-start').value;
+  const end   = document.getElementById('ord-end').value;
+  const sort  = document.getElementById('ord-sort').value;
+  const dir   = document.getElementById('ord-dir').value;
+  let url = `/orders?page=${ordPage}&page_size=10&sort_by=${sort}&sort_order=${dir}`;
+  if (cid)   url += `&customer_id=${encodeURIComponent(cid)}`;
+  if (start) url += `&start_date=${start}`;
+  if (end)   url += `&end_date=${end}`;
+  setEl('ord-body', '<tr><td colspan="8" class="loading">Loading…</td></tr>');
+  try {
+    const d = await get(url);
+    const rows = (d.items || []).map(o => {
+      const rev = (o.items || []).reduce((s, i) => s + (i.quantity * i.unit_price), 0);
+      const cost = (o.items || []).reduce((s, i) => s + (i.quantity * (i.product?.cost_price || 0)), 0);
+      const profit = rev - cost;
+      const margin = rev ? (profit / rev * 100).toFixed(1) + '%' : '—';
+      const shipStatus = o.shipment ? shipBadge(o.shipment.status) : '<span class="badge b-gray">None</span>';
+      return `<tr onclick="showOrderDetail('${o.order_id}')" style="cursor:pointer">
+        <td class="mono">${o.order_id}</td>
+        <td>${o.customer?.name || o.customer_id}</td>
+        <td>${o.order_date}</td>
+        <td>${(o.items || []).length}</td>
+        <td>${fmtCur(rev)}</td>
+        <td>${fmtCur(profit)}</td>
+        <td>${margin}</td>
+        <td>${shipStatus}</td>
+      </tr>`;
+    }).join('') || '<tr><td colspan="8" class="empty">No orders found</td></tr>';
+    setEl('ord-body', rows);
+    renderPagination('ord-pagination', ordPage, 10, d.total, loadOrders);
+  } catch(e) { setEl('ord-body', `<tr><td colspan="8" class="err-msg">${e.message}</td></tr>`); }
+}
+
+async function showOrderDetail(id) {
+  try {
+    const o = await get(`/orders/${id}`);
+    const rev = (o.items || []).reduce((s, i) => s + (i.quantity * i.unit_price), 0);
+    const cost = (o.items || []).reduce((s, i) => s + (i.quantity * (i.product?.cost_price || 0)), 0);
+    const profit = rev - cost;
+    const margin = rev ? (profit / rev * 100).toFixed(1) + '%' : '—';
+    const items = (o.items || []).map(i => `
+      <div style="padding:0.4rem 0;border-bottom:1px solid var(--border);font-size:0.8rem;display:flex;justify-content:space-between;">
+        <span>${i.product?.product_name || i.product_id} <span style="color:var(--muted)">x${i.quantity}</span></span>
+        <span>${fmtCur(i.quantity * i.unit_price)}</span>
+      </div>`).join('');
+    const shipInfo = o.shipment ? `
+      <div class="detail-section">Shipment</div>
+      ${row('Shipment ID', o.shipment.shipment_id)}
+      ${row('Warehouse', o.shipment.warehouse)}
+      ${row('Status', shipBadge(o.shipment.status))}
+      ${row('Dispatch', o.shipment.dispatch_date)}
+      ${row('Delivery', o.shipment.delivery_date || 'Pending')}
+      ${row('Duration', o.shipment.delivery_duration_days != null ? o.shipment.delivery_duration_days + ' days' : '—')}
+    ` : '<div class="detail-section">No Shipment</div>';
+    let html = `
+      <div class="detail-section">Order Info</div>
+      ${row('Order ID', o.order_id)}
+      ${row('Customer', o.customer?.name || o.customer_id)}
+      ${row('Date', o.order_date)}
+      <div class="detail-section">Items</div>
+      <div style="margin-bottom:0.5rem">${items}</div>
+      <div class="detail-section">Financials</div>
+      ${row('Revenue', fmtCur(rev))}
+      ${row('Cost', fmtCur(cost))}
+      ${row('Profit', fmtCur(profit))}
+      ${row('Margin', margin)}
+      ${shipInfo}`;
+    openDetailHTML(`Order: ${o.order_id}`, html);
+  } catch(e) { alert(e.message); }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   SHIPMENTS
+════════════════════════════════════════════════════════════════════════════ */
+let shipPage = 1;
+async function loadShipments(page) {
+  if (page) shipPage = page;
+  const status = document.getElementById('ship-status').value;
+  const wh     = document.getElementById('ship-wh').value;
+  let url = `/shipments?page=${shipPage}&page_size=10`;
+  if (status) url += `&status=${encodeURIComponent(status)}`;
+  if (wh)     url += `&warehouse=${encodeURIComponent(wh)}`;
+  setEl('ship-body', '<tr><td colspan="7" class="loading">Loading…</td></tr>');
+  try {
+    const d = await get(url);
+    const rows = (d.items || []).map(s => `<tr>
+      <td class="mono">${s.shipment_id}</td>
+      <td class="mono">${s.order_id}</td>
+      <td>${s.warehouse}</td>
+      <td>${s.dispatch_date}</td>
+      <td>${s.delivery_date || '—'}</td>
+      <td>${shipBadge(s.status)}</td>
+      <td>${s.delivery_duration_days != null ? s.delivery_duration_days : '—'}</td>
+    </tr>`).join('') || '<tr><td colspan="7" class="empty">No shipments found</td></tr>';
+    setEl('ship-body', rows);
+    renderPagination('ship-pagination', shipPage, 10, d.total, loadShipments);
+  } catch(e) { setEl('ship-body', `<tr><td colspan="7" class="err-msg">${e.message}</td></tr>`); }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   ANALYTICS
+════════════════════════════════════════════════════════════════════════════ */
+async function loadCustomerAnalytics() {
+  const id = document.getElementById('ana-id').value.trim();
+  if (!id) { setEl('ana-result', '<div class="err-msg">Enter a Customer ID first.</div>'); return; }
+  setEl('ana-result', '<div class="loading">Loading…</div>');
+  try {
+    const a = await get(`/analytics/customers/${id}`);
+    const html = `<div class="grid-4" style="margin-top:0.5rem">
+      <div class="stat-card"><div class="stat-label">Total Orders</div><div class="stat-value stat-blue">${fmt(a.total_orders)}</div></div>
+      <div class="stat-card"><div class="stat-label">Total Revenue</div><div class="stat-value stat-green">${fmtCur(a.total_revenue)}</div></div>
+      <div class="stat-card"><div class="stat-label">Total Profit</div><div class="stat-value stat-yellow">${fmtCur(a.total_profit)}</div></div>
+      <div class="stat-card"><div class="stat-label">Avg Order Value</div><div class="stat-value stat-purple">${fmtCur(a.average_order_value)}</div></div>
+    </div>`;
+    setEl('ana-result', html);
+  } catch(e) { setEl('ana-result', `<div class="err-msg">${e.message}</div>`); }
+}
+
+async function loadRegions() {
+  setEl('region-result', '<div class="loading">Loading…</div>');
+  try {
+    const r = await get('/analytics/regions');
+    if (!r || r.length === 0) { setEl('region-result', '<div class="empty">No regional data</div>'); return; }
+    const rows = r.map(reg => `<tr>
+      <td><span class="badge b-purple">${reg.region}</span></td>
+      <td>${fmt(reg.order_count)}</td>
+      <td>${fmtCur(reg.revenue)}</td>
+      <td>${fmtCur(reg.profit)}</td>
+      <td>${fmtCur(reg.average_order_value)}</td>
+    </tr>`).join('');
+    setEl('region-result', `<div class="table-wrap"><table>
+      <thead><tr><th>Region</th><th>Orders</th><th>Revenue</th><th>Profit</th><th>Avg Order Value</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>`);
+  } catch(e) { setEl('region-result', `<div class="err-msg">${e.message}</div>`); }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   PRODUCTS
+════════════════════════════════════════════════════════════════════════════ */
+async function loadProducts() {
+  setEl('prod-body', '<tr><td colspan="8" class="loading">Loading…</td></tr>');
+  try {
+    const p = await get('/analytics/products');
+    const rows = (p || []).map(pr => `<tr>
+      <td class="mono">${pr.product_id}</td>
+      <td>${pr.product_name}</td>
+      <td>${catBadge(pr.category)}</td>
+      <td>${fmt(pr.total_quantity_sold)}</td>
+      <td>${fmtCur(pr.revenue)}</td>
+      <td>${fmtCur(pr.cost)}</td>
+      <td>${fmtCur(pr.profit)}</td>
+      <td><span style="color:${pr.profit_margin >= 30 ? '#0FFCBE' : pr.profit_margin >= 10 ? '#106EBE' : '#ff6b9d'}">${fmtPct(pr.profit_margin)}</span></td>
+    </tr>`).join('') || '<tr><td colspan="8" class="empty">No product data</td></tr>';
+    setEl('prod-body', rows);
+  } catch(e) { setEl('prod-body', `<tr><td colspan="8" class="err-msg">${e.message}</td></tr>`); }
+}
+
+async function loadTopProducts() {
+  const n = document.getElementById('top-n').value || 5;
+  document.getElementById('top-title').textContent = `Top ${n} Products by Revenue`;
+  setEl('top-chart', '<div class="loading">Loading…</div>');
+  try {
+    const tp = await get(`/analytics/top-products?n=${n}`);
+    setEl('top-chart', barChart(tp, 'product_name', 'revenue', '#106EBE'));
+  } catch(e) { setEl('top-chart', `<div class="err-msg">${e.message}</div>`); }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   INGESTION
+════════════════════════════════════════════════════════════════════════════ */
+async function triggerIngest() {
+  setEl('job-result', '<div class="loading">Triggering job…</div>');
+  try {
+    const res = await fetch(API + '/ingest', { method: 'POST' });
+    const j = await res.json();
+    setEl('job-result', `<div class="card" style="margin-bottom:1rem">
+      <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap">
+        <div><span style="color:var(--muted);font-size:0.75rem">Job ID</span><br><span class="mono" style="font-size:0.85rem">${j.job_id}</span></div>
+        <div><span style="color:var(--muted);font-size:0.75rem">Status</span><br>${jobBadge(j.status)}</div>
+        <button class="btn btn-sm" onclick="pollJob('${j.job_id}')">▶ Poll Status</button>
+      </div>
+    </div>`);
+    document.getElementById('job-id-input').value = j.job_id;
+    pollJob(j.job_id);
+  } catch(e) { setEl('job-result', `<div class="err-msg">${e.message}</div>`); }
+}
+
+async function fetchJob() {
+  const id = document.getElementById('job-id-input').value.trim();
+  if (!id) return;
+  pollJob(id, true);
+}
+
+async function pollJob(id, once = false) {
+  for (let i = 0; i < 20; i++) {
+    try {
+      const j = await get(`/jobs/${id}`);
+      setEl('job-detail', `<div class="card">
+        ${row('Job ID', `<span class="mono">${j.job_id}</span>`)}
+        ${row('Status', jobBadge(j.status))}
+        ${row('Message', j.message || '—')}
+        ${row('Created', j.created_at || '—')}
+        ${row('Completed', j.completed_at || 'In progress…')}
+      </div>`);
+      if (once || j.status === 'completed' || j.status === 'failed') break;
+      await new Promise(r => setTimeout(r, 1500));
+    } catch(e) { setEl('job-detail', `<div class="err-msg">${e.message}</div>`); break; }
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   API EXPLORER
+════════════════════════════════════════════════════════════════════════════ */
+const ENDPOINTS = [
+  { method: 'GET', path: '/health', desc: 'Health check' },
+  { method: 'GET', path: '/customers?page=1&page_size=5', desc: 'List customers (page 1, 5 per page)' },
+  { method: 'GET', path: '/customers/C001', desc: 'Get customer C001' },
+  { method: 'GET', path: '/orders?page=1&page_size=5&sort_by=order_date&sort_order=desc', desc: 'List orders, newest first' },
+  { method: 'GET', path: '/orders/O1001', desc: 'Get order O1001 with full details' },
+  { method: 'GET', path: '/shipments?page=1&page_size=10', desc: 'List all shipments' },
+  { method: 'GET', path: '/shipments/S001', desc: 'Get shipment S001' },
+  { method: 'GET', path: '/analytics/customers/C001', desc: 'Customer C001 analytics' },
+  { method: 'GET', path: '/analytics/products', desc: 'All product analytics' },
+  { method: 'GET', path: '/analytics/regions', desc: 'Regional analytics' },
+  { method: 'GET', path: '/analytics/top-products?n=5', desc: 'Top 5 products by revenue' },
+  { method: 'GET', path: '/external/country/india', desc: 'External: REST Countries — India (live API call)' },
+  { method: 'POST', path: '/ingest', desc: 'Trigger a background ingestion job' },
+];
+
+function buildExplorer() {
+  const container = document.getElementById('explorer-list');
+  container.innerHTML = ENDPOINTS.map((ep, idx) => `
+    <div class="ep-card" onclick="toggleEp(${idx})">
+      <div class="ep-header">
+        <span class="${ep.method === 'GET' ? 'method-get' : 'method-post'}">${ep.method}</span>
+        <span class="ep-path">${ep.path}</span>
+      </div>
+      <div class="ep-desc">${ep.desc}</div>
+      <div class="ep-response" id="ep-res-${idx}"></div>
+    </div>`).join('');
+}
+
+async function toggleEp(idx) {
+  const el = document.getElementById(`ep-res-${idx}`);
+  if (el.classList.contains('visible')) { el.classList.remove('visible'); return; }
+  el.textContent = 'Loading…'; el.classList.add('visible');
+  const ep = ENDPOINTS[idx];
+  try {
+    const opts = ep.method === 'POST' ? { method: 'POST' } : {};
+    const res = await fetch(API + ep.path, opts);
+    const j = await res.json();
+    el.textContent = JSON.stringify(j, null, 2);
+  } catch(e) { el.textContent = 'Error: ' + e.message; el.style.color = 'var(--red)'; }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   PAGINATION
+════════════════════════════════════════════════════════════════════════════ */
+function renderPagination(id, page, size, total, cb) {
+  const pages = Math.ceil(total / size) || 1;
+  const el = document.getElementById(id);
+  if (!el) return;
+  let html = `<span class="page-info">Page ${page} of ${pages} (${total} total)</span>`;
+  if (page > 1)    html += `<button class="btn btn-sm" onclick="${cb.name}(${page - 1})">‹ Prev</button>`;
+  if (page < pages) html += `<button class="btn btn-sm" onclick="${cb.name}(${page + 1})">Next ›</button>`;
+  el.innerHTML = html;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   INIT
+════════════════════════════════════════════════════════════════════════════ */
+loadDashboard();
+</script>
+</body>
+</html>
